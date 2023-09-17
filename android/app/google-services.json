@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "513352865744",
+    "project_id": "recipeapp-dc175",
+    "storage_bucket": "recipeapp-dc175.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:513352865744:android:3516132515b88479bb8bd5",
+        "android_client_info": {
+          "package_name": "com.itecwizards.recipeapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCMD_vCkeUL4ObUCZl-6vG2SGLsW7mJ9ik"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
