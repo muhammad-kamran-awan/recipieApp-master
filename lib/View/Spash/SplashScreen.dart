@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
 
@@ -7,7 +6,6 @@ import '../../Global Styles/Buttons.dart';
 import '../../Global Styles/TextFiles.dart';
 import '../../Responsive/Responsiveclass.dart';
 import '../Home/View/Home.dart';
-import '../authentication/Login.dart';
 
 class Splash extends StatefulWidget {
   Splash({Key? key}) : super(key: key);
@@ -69,7 +67,7 @@ class _SplashState extends State<Splash> {
                     setState(() {});
 
                     // isLoading=false;
-                    Get.offAll(MainPage());
+                    Get.offAll(const MainPage());
                     // Get.to(Login());
                   },
                   child: Padding(

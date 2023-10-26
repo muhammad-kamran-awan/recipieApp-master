@@ -105,6 +105,7 @@ class _UploadRecipeScreenState extends State<UploadRecipeScreen> {
       key: _scaffoldKey,
       appBar: AppBar(
         title: Text("Upload Recipe"),
+        backgroundColor: Colors.green[600],
       ),
       body: Form(
         key: _formKey,
@@ -211,7 +212,7 @@ class _UploadRecipeScreenState extends State<UploadRecipeScreen> {
                           height: 40,
                           width: 75,
                           decoration: BoxDecoration(
-                            color: Colors.red,
+                            color: Colors.green,
                             border: Border.all(color: Colors.white),
                             borderRadius: BorderRadius.circular(12),
                           ),
@@ -352,7 +353,7 @@ class _UploadRecipeScreenState extends State<UploadRecipeScreen> {
                           height: 40,
                           width: 75,
                           decoration: BoxDecoration(
-                            color: Colors.red,
+                            color: Colors.green,
                             border: Border.all(color: Colors.white),
                             borderRadius: BorderRadius.circular(12),
                           ),
@@ -406,6 +407,7 @@ class _UploadRecipeScreenState extends State<UploadRecipeScreen> {
                     ingredients,
                     imageUrl,
                   );
+                  navigator?.pop();
                 },
                 child: Container(
                   decoration: BoxDecoration(

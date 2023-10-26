@@ -15,7 +15,7 @@ Future<void> main() async {
   await Firebase.initializeApp();
   // prefs = await SharedPreferences.getInstance();
 
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {

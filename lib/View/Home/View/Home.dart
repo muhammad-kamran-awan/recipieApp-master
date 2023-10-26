@@ -1,22 +1,23 @@
 import 'dart:convert';
-import 'dart:io';
 import 'dart:math';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:flutter/material.dart';
+import 'package:recipeapp/Global Styles/TextFiles.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
-import 'package:provider/provider.dart';
 import 'package:recipeapp/Global%20Models/RecipeModel.dart';
 import 'package:recipeapp/Responsive/Responsiveclass.dart';
-import 'package:recipeapp/View/Home/View/firebasedata.dart';
-import 'package:recipeapp/View/Home/View/newScreen.dart';
+import 'package:recipeapp/View/Home/View/fetchdata.dart';
+import 'package:recipeapp/View/Home/View/recipeSearchpage.dart';
+import 'package:recipeapp/View/Home/View/singleton.dart';
 import 'package:recipeapp/View/RecipeDetail/newRecipeDetail.dart';
 import 'package:recipeapp/View/RecipeDetail/recipeDetailScreen.dart';
 import 'package:recipeapp/View/Saved%20Recipies/SavedRecipies.dart';
@@ -24,16 +25,9 @@ import 'package:recipeapp/View/Widgets/NewRecipeWidget.dart';
 import 'package:recipeapp/View/Widgets/TrandingRecipeContainer.dart';
 import 'package:recipeapp/uploadRecipe.dart';
 
-import '../../../Global Styles/TextFiles.dart';
-import '../../../Globle Controllers/controller.dart';
-import '../../../Globle Controllers/userdataclass.dart';
-import '../../Add Recipe/AddRecipe.dart';
-import '../../Notifications/Notifications.dart';
 import '../../Profile/Profile.dart';
 import '../../Widgets/CustomBottomAppbar.dart';
-import '../../Widgets/SearchWidget.dart';
 import '../../authentication/Login.dart';
-import '/../../Global Models/Model.dart';
 import 'package:http/http.dart' as http;
 
 final List<String> _svgIcons = [
@@ -42,9 +36,9 @@ final List<String> _svgIcons = [
   'images/profile.svg',
   'images/exit.svg',
 ];
-var selected = 0;
+
 // Create an instance of the Random class
-final random = Random();
+// final random = Random();
 
 class MainPage extends StatefulWidget {
   const MainPage({Key? key}) : super(key: key);
@@ -57,7 +51,7 @@ class _MainPageState extends State<MainPage> {
   var selected = 0;
   int _selectedIndex = 0;
   var pages = [
-    Home(),
+    const Home(),
     SavedRecipes(),
     ProfileScreen(),
   ];
@@ -120,39 +114,49 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
+  void rebuildHomeScreen() {
+    setState(() {
+      // Update your state here if necessary
+    });
+  }
+
+  List cuisinesList = [
+    "Indian",
+    "American",
+    "European",
+    "Asian",
+    "Thai",
+    "Spanish",
+    "Chinese",
+  ];
   List<Recipes> recipeList = [];
   String? _userName;
   String? _userImageUrl;
+  String? mealType = "main course";
+  String? cuisines = "Indian,Asian,Italian,  European,Thai, American, Chinese";
+  TextEditingController searchController = TextEditingController();
+
+  // For Cuisines Containers
+  Color? allcuisineContainer = Color(0xFF119475);
+  Color? firstCuisineContainer = Colors.white;
+  Color? secondCuisineContainer = Colors.white;
+  Color? thirdCuisineContainer = Colors.white;
+  Color? fourthCuisineContainer = Colors.white;
+  Color? fifthCuisineContainer = Colors.white;
+  Color? sixthCuisineContainer = Colors.white;
+
+  // for cuisines text
+  Color? allCuisineText = Colors.white;
+  Color? firstCuisineText = Color(0xFF119475);
+  Color? secondCuisineText = Color.fromARGB(255, 85, 155, 138);
+  Color? thirdCuisineText = Color(0xFF119475);
+  Color? fourthCuisineText = Color(0xFF119475);
+  Color? fifthCuisineText = Color(0xFF119475);
+  Color? sixthCuisineText = Color(0xFF119475);
 
 // function for getting data from api
-  Future<RecipeModel> fetchData(String apiKey, int number, String tags) async {
-    final Uri uri = Uri.parse('https://api.spoonacular.com/recipes/random');
-    final Map<String, String> params = {
-      'apiKey': apiKey,
-      'number': number.toString(),
-      'tags': tags
-    };
 
-    final response = await http.get(uri.replace(queryParameters: params));
-
-    if (response.statusCode == 200) {
-      print("Status code is equal to 200");
-      // If the server returns a 200 OK response, parse the JSON
-      final Map<String, dynamic> data = json.decode(response.body);
-      print("data");
-      print(data);
-      final RecipeModel recipeModel = RecipeModel.fromJson(data);
-      print("recipe Model");
-      print(recipeModel.toString());
-      return recipeModel;
-    } else if (response.statusCode == 401) {
-      throw Exception("Server didn't Authorize");
-    } else {
-      print('API Request Failed - Status Code: ${response.statusCode}');
-      print('Response Body: ${response.body}');
-      throw Exception('Failed to load data');
-    }
-  }
+  // Variable to track the current screen
 
 // function for getting data from firebase
 
@@ -190,12 +194,6 @@ class _HomeState extends State<Home> {
     }
   }
 
-  @override
-  void initState() {
-    super.initState();
-    _loadUserData();
-  }
-
   Future<void> _loadUserData() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
@@ -207,6 +205,12 @@ class _HomeState extends State<Home> {
         });
       }
     }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserData();
   }
 
   Future<Map<String, dynamic>?> fetchUserData(String uid) async {
@@ -248,7 +252,7 @@ class _HomeState extends State<Home> {
               // mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 SizedBox(
-                  height: 20,
+                  height: 25,
                 ),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -256,13 +260,16 @@ class _HomeState extends State<Home> {
                   children: [
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      mainAxisAlignment: MainAxisAlignment.start,
                       children: [
                         HeadingText(
                           text: _userName != null
                               ? 'Hello, $_userName'
                               : 'Hello', // Display user's name if available
                           context: context,
+                        ),
+                        SizedBox(
+                          height: 5,
                         ),
                         smallText(
                           text: 'What are you cooking today?',
@@ -307,36 +314,404 @@ class _HomeState extends State<Home> {
                   ],
                 ),
                 SizedBox(
-                  height: responsive(20, context),
+                  height: responsive(35, context),
                 ),
-                SizedBox(
+
+                Padding(
+                  padding: const EdgeInsets.only(right: 8, left: 8),
+                  child: Row(
+                    children: [
+                      InkWell(
+                        onTap: () {
+                          currentScreen = "search";
+                          Get.to(RecipeSearchPage());
+                        },
+                        child: Container(
+                          width: 240,
+                          height: 45,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            border: Border.all(color: Colors.grey.shade300),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: [
+                              const SizedBox(
+                                width: 10,
+                              ),
+                              Icon(
+                                Icons.search_sharp,
+                                size: 30,
+                                color: Colors.grey.shade300,
+                              ),
+                              const SizedBox(
+                                width: 10,
+                              ),
+                              Container(
+                                child: Expanded(
+                                    child: Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Text(
+                                    "Search any recipe",
+                                    style: TextStyle(
+                                      color: Colors.grey.shade300,
+                                    ),
+                                  ),
+                                )),
+                              ),
+                              const SizedBox(
+                                width: 15,
+                              )
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(
+                        width: 10,
+                      ),
+                      InkWell(
+                        child: Container(
+                            height: 45,
+                            width: 45,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF119475),
+                              border: Border.all(color: Colors.white),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Icon(
+                              Icons.sort,
+                              color: Colors.white,
+                            )),
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(
                   height: 20,
                 ),
-                Column(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      "Popular Recipes",
-                      style:
-                          TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
-                    ),
-                    Container(
-                      height: 3,
-                      width: 150,
-                      color: Colors.green,
-                    )
-                  ],
+
+                const SizedBox(
+                  height: 10,
                 ),
+                // for meal types
+
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.all(3),
+                        child: InkWell(
+                          onTap: () {
+                            setState(() {
+                              currentScreen = 'home';
+                              cuisines = cuisines;
+                              allcuisineContainer = Color(0xFF119475);
+
+                              firstCuisineContainer = Colors.white;
+                              secondCuisineContainer = Colors.white;
+                              thirdCuisineContainer = Colors.white;
+                              fourthCuisineContainer = Colors.white;
+                              fifthCuisineContainer = Colors.white;
+                              sixthCuisineContainer = Colors.white;
+
+                              allCuisineText = Colors.white;
+                              firstCuisineText = Color(0xFF119475);
+                              secondCuisineText = Color(0xFF119475);
+                              thirdCuisineText = Color(0xFF119475);
+                              fourthCuisineText = Color(0xFF119475);
+                              fifthCuisineText = Color(0xFF119475);
+                              sixthCuisineText = Color(0xFF119475);
+                            });
+                          },
+                          child: Container(
+                            height: 40,
+                            width: 70,
+                            decoration: BoxDecoration(
+                                color: allcuisineContainer,
+                                borderRadius: BorderRadius.circular(12)),
+                            child: Center(
+                              child: normalText(
+                                  text: "All",
+                                  context: context,
+                                  color: allCuisineText),
+                              //   child: Text(
+                              // "All",
+                              // style: TextStyle(
+                              //   color: Colors.white,
+                              //   fontSize: 10,
+                              // ),
+                              // )
+                            ),
+                          ),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(3),
+                        child: InkWell(
+                          onTap: () {
+                            setState(() {
+                              currentScreen = 'home';
+                              cuisines = "Indian";
+                              allcuisineContainer = Colors.white;
+
+                              firstCuisineContainer = Color(0xFF119475);
+                              secondCuisineContainer = Colors.white;
+                              thirdCuisineContainer = Colors.white;
+                              fourthCuisineContainer = Colors.white;
+                              fifthCuisineContainer = Colors.white;
+                              sixthCuisineContainer = Colors.white;
+
+                              allCuisineText = Color(0xFF119475);
+                              firstCuisineText = Colors.white;
+                              secondCuisineText = Color(0xFF119475);
+                              thirdCuisineText = Color(0xFF119475);
+                              fourthCuisineText = Color(0xFF119475);
+                              fifthCuisineText = Color(0xFF119475);
+                              sixthCuisineText = Color(0xFF119475);
+                            });
+                          },
+                          child: Container(
+                            height: 40,
+                            width: 70,
+                            decoration: BoxDecoration(
+                                color: firstCuisineContainer,
+                                borderRadius: BorderRadius.circular(12)),
+                            child: Center(
+                                child: normalText(
+                                    text: "Indian",
+                                    context: context,
+                                    color: firstCuisineText)),
+                          ),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(3.0),
+                        child: InkWell(
+                          onTap: () {
+                            setState(() {
+                              cuisines = "Italian";
+                              currentScreen = 'home';
+
+                              firstCuisineContainer = Colors.white;
+                              allcuisineContainer = Colors.white;
+                              secondCuisineContainer = Color(0xFF119475);
+                              thirdCuisineContainer = Colors.white;
+                              fourthCuisineContainer = Colors.white;
+                              fifthCuisineContainer = Colors.white;
+                              sixthCuisineContainer = Colors.white;
+
+                              allCuisineText = Color(0xFF119475);
+                              firstCuisineText = Color(0xFF119475);
+                              secondCuisineText = Colors.white;
+                              thirdCuisineText = Color(0xFF119475);
+                              fourthCuisineText = Color(0xFF119475);
+                              fifthCuisineText = Color(0xFF119475);
+                              sixthCuisineText = Color(0xFF119475);
+                            });
+                          },
+                          child: Container(
+                            height: 40,
+                            width: 70,
+                            decoration: BoxDecoration(
+                                color: secondCuisineContainer,
+                                borderRadius: BorderRadius.circular(12)),
+                            child: Center(
+                                child: normalText(
+                                    context: context,
+                                    color: secondCuisineText,
+                                    text: "Italian")),
+                          ),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(3.0),
+                        child: InkWell(
+                          onTap: () {
+                            setState(() {
+                              cuisines = "Asian";
+                              currentScreen = 'home';
+                              // thirdContainerColor = Color(0xFF119475);
+                              firstCuisineContainer = Colors.white;
+                              allcuisineContainer = Colors.white;
+                              secondCuisineContainer = Colors.white;
+                              thirdCuisineContainer = Color(0xFF119475);
+                              fourthCuisineContainer = Colors.white;
+                              fifthCuisineContainer = Colors.white;
+                              sixthCuisineContainer = Colors.white;
+
+                              allCuisineText = Color(0xFF119475);
+                              firstCuisineText = Color(0xFF119475);
+                              secondCuisineText = Color(0xFF119475);
+                              thirdCuisineText = Colors.white;
+                              fourthCuisineText = Color(0xFF119475);
+                              fifthCuisineText = Color(0xFF119475);
+                              sixthCuisineText = Color(0xFF119475);
+                            });
+                          },
+                          child: Container(
+                            height: 40,
+                            width: 70,
+                            decoration: BoxDecoration(
+                                color: thirdCuisineContainer,
+                                borderRadius: BorderRadius.circular(12)),
+                            child: Center(
+                                child: normalText(
+                                    text: "Asian",
+                                    color: thirdCuisineText,
+                                    context: context)),
+                          ),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(3.0),
+                        child: InkWell(
+                          onTap: () {
+                            setState(() {
+                              cuisines = "European";
+                              currentScreen = 'home';
+                              firstCuisineContainer = Colors.white;
+                              secondCuisineContainer = Colors.white;
+                              thirdCuisineContainer = Colors.white;
+                              allcuisineContainer = Colors.white;
+                              fourthCuisineContainer = Color(0xFF119475);
+                              fifthCuisineContainer = Colors.white;
+                              sixthCuisineContainer = Colors.white;
+
+                              allCuisineText = Color(0xFF119475);
+                              firstCuisineText = Color(0xFF119475);
+                              secondCuisineText = Color(0xFF119475);
+                              thirdCuisineText = Color(0xFF119475);
+                              fourthCuisineText = Colors.white;
+                              fifthCuisineText = Color(0xFF119475);
+                              sixthCuisineText = Color(0xFF119475);
+                            });
+                          },
+                          child: Container(
+                            height: 40,
+                            width: 70,
+                            decoration: BoxDecoration(
+                                color: fourthCuisineContainer,
+                                borderRadius: BorderRadius.circular(12)),
+                            child: Center(
+                                child: normalText(
+                                    text: "European",
+                                    color: fourthCuisineText,
+                                    context: context)),
+                          ),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(3.0),
+                        child: InkWell(
+                          onTap: () {
+                            setState(() {
+                              cuisines = "Thai";
+                              currentScreen = 'home';
+                              firstCuisineContainer = Colors.white;
+                              secondCuisineContainer = Colors.white;
+                              thirdCuisineContainer = Colors.white;
+                              fourthCuisineContainer = Colors.white;
+                              allcuisineContainer = Colors.white;
+                              fifthCuisineContainer = Color(0xFF119475);
+                              sixthCuisineContainer = Colors.white;
+
+                              allCuisineText = Color(0xFF119475);
+                              firstCuisineText = Color(0xFF119475);
+                              secondCuisineText = Color(0xFF119475);
+                              thirdCuisineText = Color(0xFF119475);
+                              fourthCuisineText = Color(0xFF119475);
+                              fifthCuisineText = Colors.white;
+                              sixthCuisineText = Color(0xFF119475);
+                            });
+                          },
+                          child: Container(
+                            height: 40,
+                            width: 70,
+                            decoration: BoxDecoration(
+                                color: fifthCuisineContainer,
+                                borderRadius: BorderRadius.circular(12)),
+                            child: Center(
+                                child: normalText(
+                              text: "Thai",
+                              color: fifthCuisineText,
+                              context: context,
+                            )),
+                          ),
+                        ),
+                      ),
+                      // for chinese recipes
+                      Padding(
+                        padding: const EdgeInsets.all(3.0),
+                        child: InkWell(
+                          onTap: () {
+                            setState(() {
+                              cuisines = "Chinese";
+                              currentScreen = 'home';
+                              firstCuisineContainer = Colors.white;
+                              secondCuisineContainer = Colors.white;
+                              thirdCuisineContainer = Colors.white;
+                              fourthCuisineContainer = Colors.white;
+                              fifthCuisineContainer = Colors.white;
+                              allcuisineContainer = Colors.white;
+                              sixthCuisineContainer = const Color(0xFF119475);
+
+                              allCuisineText = const Color(0xFF119475);
+                              firstCuisineText = const Color(0xFF119475);
+                              secondCuisineText = const Color(0xFF119475);
+                              thirdCuisineText = const Color(0xFF119475);
+                              fourthCuisineText = const Color(0xFF119475);
+                              fifthCuisineText = const Color(0xFF119475);
+                              sixthCuisineText = Colors.white;
+                            });
+                          },
+                          child: Container(
+                            height: 40,
+                            width: 70,
+                            decoration: BoxDecoration(
+                                color: sixthCuisineContainer,
+                                borderRadius: BorderRadius.circular(12)),
+                            child: Center(
+                                child: normalText(
+                              text: "Chinese",
+                              color: sixthCuisineText,
+                              context: context,
+                            )),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(
+                  height: 10,
+                ),
+
                 FutureBuilder<RecipeModel>(
-                  future: fetchData("3190c737146b4168b65a7cf77f729edf", 100,
-                      "main course,Indian"),
+                  future: fetchData("d9616493b6c747ec9f8ad5c95bdfe10e3", 100,
+                      "$mealType,$cuisines", currentScreen),
                   builder: (context, snapshot) {
                     print("Fetch Data is working");
                     if (snapshot.connectionState == ConnectionState.waiting) {
-                      return CircularProgressIndicator();
+                      return const SizedBox(
+                        child: Center(
+                            child: SpinKitCircle(
+                          color: Color(0xFF119475),
+                          size: 75,
+                        )),
+                      );
                     } else if (snapshot.hasError) {
-                      return Text('Error: ${snapshot.error}');
+                      return const Padding(
+                        padding: EdgeInsets.all(8.0),
+                        child: Text(
+                          'We apologize, but there are currently no recipes available for your request. Try a different search to discover new recipes.',
+                          style: TextStyle(fontSize: 16, color: Colors.red),
+                        ),
+                      );
                     } else if (snapshot.hasData) {
                       final recipeModel = snapshot.data!;
                       List<Recipes> recipes =
@@ -352,6 +727,8 @@ class _HomeState extends State<Home> {
                             itemBuilder: (context, index) {
                               final recipe = recipes[index];
                               final ingredients = recipe.extendedIngredients;
+                              final AnalyzedInstructions =
+                                  recipe.analyzedInstructions;
 
                               return Padding(
                                 padding: const EdgeInsets.all(8.0),
@@ -366,6 +743,8 @@ class _HomeState extends State<Home> {
                                       MaterialPageRoute(
                                           builder: (context) =>
                                               RecipeDetailScreen(
+                                                analyzedInstructions:
+                                                    AnalyzedInstructions,
                                                 cookingTime:
                                                     recipe.readyInMinutes ??
                                                         "20",
@@ -393,17 +772,17 @@ class _HomeState extends State<Home> {
                           ),
                         );
                       } else {
-                        return Text('No recipes available.');
+                        return const Text('No recipes available.');
                       }
                     } else {
-                      return Text('No data available.');
+                      return const Text('No data available.');
                     }
                   },
                 ),
-                SizedBox(
+                const SizedBox(
                   height: 20,
                 ),
-                Column(
+                const Column(
                   mainAxisAlignment: MainAxisAlignment.start,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -412,22 +791,21 @@ class _HomeState extends State<Home> {
                       style:
                           TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
                     ),
-                    Container(
-                      height: 3,
-                      width: 120,
-                      color: Colors.green,
-                    )
                   ],
                 ),
                 FutureBuilder<List<Map<String, dynamic>>>(
                   future: fetchRecipesWithUserNames(),
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting) {
-                      return CircularProgressIndicator();
+                      return const Center(
+                          child: SpinKitCircle(
+                        color: Color(0xFF119475),
+                        size: 75,
+                      ));
                     } else if (snapshot.hasError) {
                       return Text('Error: ${snapshot.error}');
                     } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                      return Text('No recipes available.');
+                      return const Text('No recipes available.');
                     } else {
                       final recipes = snapshot.data;
                       return Container(
@@ -496,3 +874,5 @@ void handleExit() {
   // Use SystemNavigator.pop() to exit the app
   SystemNavigator.pop();
 }
+
+String currentScreen = 'home';

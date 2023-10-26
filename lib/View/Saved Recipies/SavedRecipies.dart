@@ -2,10 +2,12 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:recipeapp/Responsive/Responsiveclass.dart';
 import 'package:recipeapp/View/RecipeDetail/newRecipeDetail.dart';
 import 'package:recipeapp/View/Widgets/NewRecipeWidget.dart';
 import 'package:recipeapp/View/Widgets/TrandingRecipeContainer.dart';
+import 'package:recipeapp/View/Widgets/savedrecipeContainer.dart';
 
 class SavedRecipes extends StatefulWidget {
   @override
@@ -65,69 +67,82 @@ class _SavedRecipesState extends State<SavedRecipes> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Favourite Recipes"),
-        backgroundColor: Colors.green[600],
+        title: Text(
+          "Saved Recipes",
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 20,
+            color: Colors.black,
+          ),
+        ),
+        backgroundColor: Colors.transparent,
+        centerTitle: true,
+        elevation: 0,
       ),
-      body: Column(
-        children: [
-          FutureBuilder<List<Map<String, dynamic>>>(
-            future: fetchUserFavoriteRecipes(),
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return CircularProgressIndicator();
-              } else if (snapshot.hasError) {
-                return Text('Error: ${snapshot.error}');
-              } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                return Center(
-                  child: Padding(
-                    padding: const EdgeInsets.only(top: 100),
-                    child: Container(
-                        child: Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Center(
-                            child: Container(
-                                height: 300,
-                                width: 300,
-                                child: Image.asset("images/emp.jpg")),
-                          ),
-                          SizedBox(
-                            height: 20,
-                          ),
-                          Text(
-                            'No favorite recipes available',
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                        ],
-                      ),
-                    )),
-                  ),
-                );
-              } else {
-                final favoriteRecipes = snapshot.data;
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            FutureBuilder<List<Map<String, dynamic>>>(
+              future: fetchUserFavoriteRecipes(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return SpinKitCircle(
+                    color: Color(0xFF119475),
+                    size: 75,
+                  );
+                } else if (snapshot.hasError) {
+                  return Text('Error: ${snapshot.error}');
+                } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                  return Center(
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: 100),
+                      child: Container(
+                          child: Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Center(
+                              child: Container(
+                                  height: 300,
+                                  width: 300,
+                                  child: Image.asset("images/emp.jpg")),
+                            ),
+                            SizedBox(
+                              height: 20,
+                            ),
+                            Text(
+                              'No favorite recipes available',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                          ],
+                        ),
+                      )),
+                    ),
+                  );
+                } else {
+                  final favoriteRecipes = snapshot.data;
 
-                // Display the user's favorite recipes as needed
-                return Container(
-                  height: responsive(240, context),
-                  child: ListView.builder(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: favoriteRecipes!.length,
-                    itemBuilder: (context, index) {
-                      final recipe = favoriteRecipes[index];
-                      final userName = recipe['UserName'];
-                      final title = recipe['title'];
-                      final ingredients = recipe['Ingredients'];
-                      final instructions = recipe['Instructions'];
-                      final serving = recipe['Serving'];
-                      final cookingTime = recipe['ReadyIn'];
-                      final image = recipe['ImageUrl'];
-                      final recipeid = recipe['RecipeId'];
-                      // Display recipe details
-                      return Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: InkWell(
+                  // Display the user's favorite recipes as needed
+                  return Container(
+                    height: double.maxFinite,
+                    child: ListView.builder(
+                      scrollDirection: Axis.vertical,
+                      itemCount: favoriteRecipes!.length,
+                      itemBuilder: (context, index) {
+                        final recipe = favoriteRecipes[index];
+                        print("recipes");
+                        print(recipe.toString());
+                        final userName = recipe['UserName'];
+                        final title = recipe['title'];
+                        final ingredients = recipe['Ingredients'];
+                        final instructions = recipe['Instructions'];
+                        final serving = recipe['Serving'];
+                        final cookingTime = recipe['ReadyIn'];
+                        final image = recipe['ImageUrl'];
+                        final recipeid = recipe['RecipeId'];
+                        // Display recipe details
+                        return InkWell(
                             onTap: () {
                               Navigator.push(
                                 context,
@@ -146,20 +161,19 @@ class _SavedRecipesState extends State<SavedRecipes> {
                                         )),
                               );
                             },
-                            child: TrendingRecipe(
+                            child: savedRecipeContainer(
                               name: title,
                               url: image,
-                              // auther: userName,
                               time: cookingTime,
-                            )),
-                      );
-                    },
-                  ),
-                );
-              }
-            },
-          )
-        ],
+                            ));
+                      },
+                    ),
+                  );
+                }
+              },
+            )
+          ],
+        ),
       ),
     );
   }

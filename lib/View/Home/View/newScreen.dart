@@ -97,6 +97,7 @@ class RecipeListWidget extends StatelessWidget {
         itemBuilder: (context, index) {
           final recipe = recipes[index];
           final ingredients = recipe.extendedIngredients;
+          final analyzedInst = recipe.analyzedInstructions;
 
           return Padding(
             padding: const EdgeInsets.all(8.0),
@@ -112,6 +113,7 @@ class RecipeListWidget extends StatelessWidget {
                       builder: (context) => RecipeDetailScreen(
                             cookingTime: recipe.readyInMinutes ?? "20",
                             Serving: recipe.servings ?? "5",
+                            analyzedInstructions: recipe.analyzedInstructions,
                             image: recipe.image ??
                                 "https://i2.wp.com/www.downshiftology.com/wp-content/uploads/2018/12/Shakshuka-19.jpg",
                             title: recipe.title ?? "No title",
@@ -144,10 +146,103 @@ class IngredientsList extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        SingleChildScrollView(
+          scrollDirection: Axis.vertical,
+          child: Column(
+            children: ingredients.map((ingredient) {
+              return Padding(
+                padding: const EdgeInsets.only(
+                    right: 20, left: 20, bottom: 5, top: 5),
+                child: Column(
+                  children: [
+                    Container(
+                      width: 350,
+                      height: 80,
+                      decoration: BoxDecoration(
+                          color: Colors.grey[300],
+                          borderRadius: BorderRadius.circular(12)),
+                      child: SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: [
+                            SizedBox(
+                              width: 10,
+                            ),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              children: [
+                                Container(
+                                  height: 60,
+                                  width: 70,
+                                  decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.circular(12)),
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: SizedBox(
+                                      height: 40,
+                                      width: 40,
+                                      child: Image.network(
+                                        "https://spoonacular.com/cdn/ingredients_500x500/" +
+                                            ingredient.image.toString(),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                SizedBox(
+                                  width: 10,
+                                ),
+                                Text(
+                                  ingredient.nameClean.toString() ??
+                                      "Name not Available",
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 14),
+                                ),
+                              ],
+                            ),
+                            SizedBox(
+                              width: 10,
+                            ),
+                            Row(
+                              children: [
+                                Text(ingredient.measures.metric.amount
+                                        .toString() ??
+                                    "Data not available"),
+                                Text(ingredient.unit.toString() ??
+                                    "Data not available"),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }).toList(),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class AnalyzedInstructionList extends StatelessWidget {
+  final List<AnalyzedInstructions> analyzedInstructions;
+
+  AnalyzedInstructionList({required this.analyzedInstructions});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
         Padding(
           padding: const EdgeInsets.all(12.0),
           child: Text(
-            'Ingredients:',
+            'Analyzed Instructions',
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
@@ -157,29 +252,29 @@ class IngredientsList extends StatelessWidget {
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           child: Row(
-            children: ingredients.map((ingredient) {
+            children: analyzedInstructions.map((AnalyzedInstruction) {
               return Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: Container(
                   width: 170,
                   // color: Colors.amber,
-                  child: Column(
-                    children: [
-                      Image.network(
-                        "https://spoonacular.com/cdn/ingredients_500x500/" +
-                            ingredient.image.toString(),
-                        width: 75,
-                        height: 75,
-                      ),
-                      Text(
-                        ingredient.name ?? "Name not Available",
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
+                  child: Builder(builder: (context) {
+                    return Column(
+                      children: [
+                        Row(
+                          children: [
+                            Text(AnalyzedInstruction.steps.toString()),
+                            Text(
+                              AnalyzedInstruction.name ?? "Name not Available",
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
                         ),
-                      ),
-                      Text(ingredient.original ?? "Data not available"),
-                    ],
-                  ),
+                      ],
+                    );
+                  }),
                 ),
               );
             }).toList(),

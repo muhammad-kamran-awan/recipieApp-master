@@ -16,6 +16,7 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen> {
   TextEditingController emailController = TextEditingController();
   @override
   Widget build(BuildContext context) {
+    print("rebuild");
     return Scaffold(
       body: Center(
         child: Column(
@@ -109,7 +110,7 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen> {
                 height: 50,
                 width: 120,
                 decoration: BoxDecoration(
-                    color: Colors.green,
+                    color: Color(0xFF119475),
                     border: Border.all(
                       color: Colors.white,
                     ),
