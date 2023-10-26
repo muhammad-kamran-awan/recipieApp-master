@@ -7,6 +7,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:recipeapp/Global Styles/TextFiles.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
@@ -15,7 +16,7 @@ import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
 import 'package:recipeapp/Global%20Models/RecipeModel.dart';
 import 'package:recipeapp/Responsive/Responsiveclass.dart';
-import 'package:recipeapp/View/Home/View/fetchdata.dart';
+import 'package:recipeapp/View/Home/View/providerlogic.dart';
 import 'package:recipeapp/View/Home/View/recipeSearchpage.dart';
 import 'package:recipeapp/View/Home/View/singleton.dart';
 import 'package:recipeapp/View/RecipeDetail/newRecipeDetail.dart';
@@ -691,93 +692,97 @@ class _HomeState extends State<Home> {
                   height: 10,
                 ),
 
-                FutureBuilder<RecipeModel>(
-                  future: fetchData("d9616493b6c747ec9f8ad5c95bdfe10e3", 100,
-                      "$mealType,$cuisines", currentScreen),
-                  builder: (context, snapshot) {
-                    print("Fetch Data is working");
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const SizedBox(
-                        child: Center(
-                            child: SpinKitCircle(
-                          color: Color(0xFF119475),
-                          size: 75,
-                        )),
-                      );
-                    } else if (snapshot.hasError) {
-                      return const Padding(
-                        padding: EdgeInsets.all(8.0),
-                        child: Text(
-                          'We apologize, but there are currently no recipes available for your request. Try a different search to discover new recipes.',
-                          style: TextStyle(fontSize: 16, color: Colors.red),
-                        ),
-                      );
-                    } else if (snapshot.hasData) {
-                      final recipeModel = snapshot.data!;
-                      List<Recipes> recipes =
-                          recipeModel.recipes; // No need for null check
-
-                      if (recipes.isNotEmpty) {
-                        // Check if recipes list is not empty
-                        return Container(
-                          height: responsive(240, context),
-                          child: ListView.builder(
-                            scrollDirection: Axis.horizontal,
-                            itemCount: recipes.length,
-                            itemBuilder: (context, index) {
-                              final recipe = recipes[index];
-                              final ingredients = recipe.extendedIngredients;
-                              final AnalyzedInstructions =
-                                  recipe.analyzedInstructions;
-
-                              return Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: InkWell(
-                                  onTap: () {
-                                    print("Extended Ingredients");
-                                    print(ingredients.toString());
-                                    print("Cuisines");
-                                    print(recipe.cuisines.toString());
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                          builder: (context) =>
-                                              RecipeDetailScreen(
-                                                analyzedInstructions:
-                                                    AnalyzedInstructions,
-                                                cookingTime:
-                                                    recipe.readyInMinutes ??
-                                                        "20",
-                                                Serving: recipe.servings ?? "5",
-                                                image: recipe.image ??
-                                                    "https://i2.wp.com/www.downshiftology.com/wp-content/uploads/2018/12/Shakshuka-19.jpg",
-                                                title:
-                                                    recipe.title ?? "No title",
-                                                ingredients:
-                                                    recipe.extendedIngredients,
-                                                instructions: recipe
-                                                        .instructions ??
-                                                    "No Instructions Available",
-                                              )),
-                                    );
-                                  },
-                                  child: TrendingRecipe(
-                                      url: recipe.image ??
-                                          "https://i2.wp.com/www.downshiftology.com/wp-content/uploads/2018/12/Shakshuka-19.jpg",
-                                      time: recipe.readyInMinutes ?? "20",
-                                      name: recipe.title ?? "No title"),
-                                ),
-                              );
-                            },
+                Consumer<providerLogic>(
+                  builder: (context, value, child) =>
+                      FutureBuilder<RecipeModel>(
+                    future: value.fetchData("d9616493b6c747ec9f8ad5c95bdfe10e",
+                        100, "$mealType,$cuisines", currentScreen),
+                    builder: (context, snapshot) {
+                      print("Fetch Data is working");
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const SizedBox(
+                          child: Center(
+                              child: SpinKitCircle(
+                            color: Color(0xFF119475),
+                            size: 75,
+                          )),
+                        );
+                      } else if (snapshot.hasError) {
+                        return const Padding(
+                          padding: EdgeInsets.all(8.0),
+                          child: Text(
+                            'We apologize, but there are currently no recipes available for your request. Try a different search to discover new recipes.',
+                            style: TextStyle(fontSize: 16, color: Colors.red),
                           ),
                         );
+                      } else if (snapshot.hasData) {
+                        final recipeModel = snapshot.data!;
+                        List<Recipes> recipes =
+                            recipeModel.recipes; // No need for null check
+
+                        if (recipes.isNotEmpty) {
+                          // Check if recipes list is not empty
+                          return Container(
+                            height: responsive(240, context),
+                            child: ListView.builder(
+                              scrollDirection: Axis.horizontal,
+                              itemCount: recipes.length,
+                              itemBuilder: (context, index) {
+                                final recipe = recipes[index];
+                                final ingredients = recipe.extendedIngredients;
+                                final AnalyzedInstructions =
+                                    recipe.analyzedInstructions;
+
+                                return Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: InkWell(
+                                    onTap: () {
+                                      print("Extended Ingredients");
+                                      print(ingredients.toString());
+                                      print("Cuisines");
+                                      print(recipe.cuisines.toString());
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                            builder: (context) =>
+                                                RecipeDetailScreen(
+                                                  analyzedInstructions:
+                                                      AnalyzedInstructions,
+                                                  cookingTime:
+                                                      recipe.readyInMinutes ??
+                                                          "20",
+                                                  Serving:
+                                                      recipe.servings ?? "5",
+                                                  image: recipe.image ??
+                                                      "https://i2.wp.com/www.downshiftology.com/wp-content/uploads/2018/12/Shakshuka-19.jpg",
+                                                  title: recipe.title ??
+                                                      "No title",
+                                                  ingredients: recipe
+                                                      .extendedIngredients,
+                                                  instructions: recipe
+                                                          .instructions ??
+                                                      "No Instructions Available",
+                                                )),
+                                      );
+                                    },
+                                    child: TrendingRecipe(
+                                        url: recipe.image ??
+                                            "https://i2.wp.com/www.downshiftology.com/wp-content/uploads/2018/12/Shakshuka-19.jpg",
+                                        time: recipe.readyInMinutes ?? "20",
+                                        name: recipe.title ?? "No title"),
+                                  ),
+                                );
+                              },
+                            ),
+                          );
+                        } else {
+                          return const Text('No recipes available.');
+                        }
                       } else {
-                        return const Text('No recipes available.');
+                        return const Text('No data available.');
                       }
-                    } else {
-                      return const Text('No data available.');
-                    }
-                  },
+                    },
+                  ),
                 ),
                 const SizedBox(
                   height: 20,

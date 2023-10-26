@@ -1,16 +1,19 @@
 import 'dart:convert';
 
+import 'package:flutter/cupertino.dart';
 import 'package:recipeapp/Global%20Models/RecipeModel.dart';
 import 'package:http/http.dart' as http;
 
-Future<RecipeModel> fetchData(
-  String apiKey,
-  int number,
-  String tags,
-  String currentScreen,
-) async {
-  print("trying to hit home screen api");
-  if (currentScreen == 'home') {
+class providerLogic extends ChangeNotifier {
+  Future<RecipeModel> fetchData(
+    String apiKey,
+    int number,
+    String tags,
+    String currentScreen,
+  ) async {
+    print("trying to hit home screen api");
+
+    notifyListeners();
     print("Running Home api");
     final Uri uri = Uri.parse('https://api.spoonacular.com/recipes/random');
     final Map<String, String> params = {
@@ -39,8 +42,5 @@ Future<RecipeModel> fetchData(
       print('Response Body: ${response.body}');
       throw Exception("Api is not sending data");
     }
-  } else {
-    print("not on home screen");
-    throw Exception("Not on home scren");
   }
 }

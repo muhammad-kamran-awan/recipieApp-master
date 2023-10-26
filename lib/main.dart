@@ -1,6 +1,8 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:provider/provider.dart';
+import 'package:recipeapp/View/Home/View/providerlogic.dart';
 // import com.google.android.gms.ads.MobileAds;
 // import 'package:google.android.gms.ads.initialization.InitializationStatus';
 
@@ -25,15 +27,22 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // FoodDBProvider().loadJsonData();
-    return GetMaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: MaterialApp(
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(
+          create: (context) => providerLogic(),
+        )
+      ],
+      child: GetMaterialApp(
         debugShowCheckedModeBanner: false,
-        title: 'Flutter Demo',
-        theme: ThemeData(
-          primarySwatch: Colors.teal,
+        home: MaterialApp(
+          debugShowCheckedModeBanner: false,
+          title: 'Flutter Demo',
+          theme: ThemeData(
+            primarySwatch: Colors.teal,
+          ),
+          home: Splash(),
         ),
-        home: Splash(),
       ),
     );
   }
